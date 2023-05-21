@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  nest:
+    container_name: nest
+    build: .
+    ports:
+      - 3000:3000
+    environment:
+      DB_HOST: host.docker.internal
+    depends_on:
+      - postgres
+    links:
+      - postgres
+  postgres:
+    container_name: postgres
+    image: postgres:15.3-alpine
+    ports:
+      - ${POSTGRES_PORT_EXTERNAL}:5432
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - ws-network
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${DB_PASS}@${DB_PASS}.org
+      PGADMIN_DEFAULT_PASSWORD: ${DB_PASS}
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  ws-network:
